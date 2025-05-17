@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ device_id }} | Historical Data</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --error: #ef4444;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --border: #e2e8f0;
+      --radius: 0.5rem;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --transition: all 0.2s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 2rem;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      transition: var(--transition);
+    }
+
+    .back-link:hover {
+      color: var(--primary-hover);
+      text-decoration: underline;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .export-controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .date-filter {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--card-bg);
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .date-filter label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-light);
+    }
+
+    .date-filter input {
+      padding: 0.375rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 0.875rem;
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .export-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 0.875rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .export-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .export-btn:active {
+      transform: translateY(0);
+    }
+
+    .data-table-container {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-top: 1.5rem;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    thead {
+      background-color: var(--bg);
+      border-bottom: 2px solid var(--border);
+    }
+
+    th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.875rem;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .numeric-cell {
+      font-family: 'Inter', monospace;
+      text-align: right;
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timestamp-cell {
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      padding: 3rem;
+      text-align: center;
+      color: var(--text-light);
+    }
+
+    .empty-state svg {
+      margin-bottom: 1rem;
+      color: var(--border);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1.5rem;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .export-controls {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .date-filter {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="{{ url_for('control_device', device_id=device_id) }}" class="back-link">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Back to Live View
+    </a>
+
+    <div class="page-header">
+      <h1 class="page-title">Historical Data – {{ device_id }}</h1>
+      <div class="export-controls">
+        <div class="date-filter">
+          <label>
+            <span class="material-symbols-outlined">calendar_today</span>
+            From
+            <input type="date" id="from">
+          </label>
+          <label>
+            <span class="material-symbols-outlined">event</span>
+            To
+            <input type="date" id="to">
+          </label>
+        </div>
+        <div class="export-buttons">
+          <button id="csvBtn" class="export-btn">
+            <span class="material-symbols-outlined">download</span>
+            CSV
+          </button>
+          <button id="pdfBtn" class="export-btn">
+            <span class="material-symbols-outlined">picture_as_pdf</span>
+            PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-table-container">
+      {% if records %}
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp (UTC)</th>
+              <th>Voltage (V)</th>
+              <th>Current (A)</th>
+              <th>Temperature (°C)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in records %}
+            <tr>
+              <td class="timestamp-cell">{{ row.ts.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+              <td class="numeric-cell">{{ "%.2f"|format(row.voltage) }}</td>
+              <td class="numeric-cell">{{ "%.2f"|format(row.current) }}</td>
+              <td class="numeric-cell">{{ "%.1f"|format(row.temperature) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <h3>No historical data available</h3>
+          <p>Select a date range to view recorded measurements</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    const id = "{{ device_id }}";
+    function exp(fmt){
+      const s = document.getElementById('from').value;
+      const e = document.getElementById('to').value;
+      if(!s || !e){ alert("Pick start & end"); return; }
+      const url = `/api/export/${fmt}/${id}?start=${s}&end=${e}`;
+      window.open(url, '_blank');           // triggers download
+    }
+    document.getElementById('csvBtn').onclick = ()=>exp('csv');
+    document.getElementById('pdfBtn').onclick = ()=>exp('pdf');
+  </script>
+</body>
+</html>

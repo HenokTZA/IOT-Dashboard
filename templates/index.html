@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ESP32 GPIO Dashboard</title>
+<style>
+  body { font-family: sans-serif; text-align: center; padding: 2rem; }
+  .btn { display:inline-block; margin:0.5rem; padding:1rem 1.5rem;
+         border:none; border-radius:4px; min-width:120px; cursor:pointer; }
+  .on  { background:#4caf50; color:#fff; }
+  .off { background:#f44336; color:#fff; }
+</style>
+</head>
+<body>
+  <h1>ESP32 GPIO Dashboard</h1>
+  <div id="buttons"></div>
+
+<script>
+const DEVICE_ID = "{{ device_id }}";   // injected by Flask
+const container = document.getElementById("buttons");
+
+for (let i = 0; i < 10; i++) {
+  const btn = document.createElement("button");
+  btn.className = "btn off";
+  btn.textContent = `GPIO ${i}: OFF`;
+  btn.dataset.pin   = i;
+  btn.dataset.state = 0;
+
+  btn.addEventListener("click", async () => {
+    const newState = btn.dataset.state === "0" ? 1 : 0;
+
+    try {
+      const res = await fetch("/api/gpio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          device: DEVICE_ID,    // ★ now present
+          pin:    i,
+          state:  newState
+        })
+      });
+
+      if (!res.ok) throw await res.text();   // show server error
+
+      // optimistic UI update
+      btn.dataset.state = newState;
+      btn.textContent   = `GPIO ${i}: ${newState ? "ON" : "OFF"}`;
+      btn.className     = `btn ${newState ? "on" : "off"}`;
+    } catch (err) {
+      alert("Error toggling GPIO:\n" + err);
+    }
+  });
+
+  container.appendChild(btn);
+}
+</script>
+</body>
+</html>

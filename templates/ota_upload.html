@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bulk OTA Upload</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Light theme */
+  --bg-color: #f9fafb;
+  --card-bg: #ffffff;
+  --text-color: #111827;
+  --text-secondary: #4b5563;
+  --border-color: #e5e7eb;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --success: #059669;
+  --error: #dc2626;
+  --drop-bg: #f8fafc;
+  --drop-border: #e2e8f0;
+  --drop-active: rgba(59, 130, 246, 0.05);
+}
+
+[data-theme="dark"] {
+  /* Dark theme */
+  --bg-color: #111827;
+  --card-bg: #1f2937;
+  --text-color: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-color: #374151;
+  --primary: #60a5fa;
+  --primary-hover: #3b82f6;
+  --success: #34d399;
+  --error: #f87171;
+  --drop-bg: #1f2937;
+  --drop-border: #4b5563;
+  --drop-active: rgba(96, 165, 250, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  margin: 1rem;
+}
+
+h1 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+}
+
+#drop {
+  border: 2px dashed var(--drop-border);
+  border-radius: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  cursor: pointer;
+  background-color: var(--drop-bg);
+  margin-bottom: 1rem;
+}
+
+#drop.drag {
+  border-color: var(--primary);
+  background-color: var(--drop-active);
+}
+
+#drop p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+input {
+  display: none;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  background-color: var(--primary);
+  color: white;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+button:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+#msg {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  min-height: 1.25rem;
+}
+
+a.back {
+  display: block;
+  margin-top: 1.5rem;
+  color: var(--primary);
+  font-size: 0.875rem;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+a.back:hover {
+  text-decoration: underline;
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Animation for file drop */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+#drop.drag {
+  animation: pulse 1.5s infinite;
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <button class="theme-toggle" aria-label="Toggle theme">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"></circle>
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+    </svg>
+  </button>
+  
+  <h1>Bulk OTA Update</h1>
+
+  <div id="drop">
+    <p>Drag &amp; drop firmware file<br>or click to browse</p>
+  </div>
+
+  <input id="file" type="file" accept=".bin">
+
+  <button id="upload" disabled>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="17 8 12 3 7 8"></polyline>
+      <line x1="12" y1="3" x2="12" y2="15"></line>
+    </svg>
+    Upload to all online devices
+  </button>
+  
+  <div id="msg"></div>
+  <a class="back" href="{{ url_for('select_device') }}">&larr; Back to dashboard</a>
+</div>
+
+<script>
+const drop   = document.getElementById('drop');
+const input  = document.getElementById('file');
+const btn    = document.getElementById('upload');
+const msgBox = document.getElementById('msg');
+let picked   = null;
+
+/* ── drag & click handling ───────────────────────── */
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{
+  e.preventDefault(); drop.classList.add('drag');
+}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{
+  e.preventDefault(); drop.classList.remove('drag');
+}));
+drop.addEventListener('drop',e=>{
+  picked = e.dataTransfer.files[0];
+  updateUI();
+});
+drop.addEventListener('click',()=> input.click());
+input.addEventListener('change',e=>{
+  picked = e.target.files[0];
+  updateUI();
+});
+
+/* ── upload ──────────────────────────────────────── */
+btn.addEventListener('click', async ()=>{
+  if(!picked) return;
+  btn.disabled = true; msg('');
+  const fd = new FormData(); fd.append('file', picked);
+  try{
+    const res  = await fetch('/api/ota/bulk', {method:'POST', body:fd});
+    const data = await res.json();
+    if(!res.ok) throw (data.error||'Upload failed');
+    msg(`Job ${data.job_id} started for ${data.targets.length} device(s)`, false);
+  }catch(err){ msg(err, true); }
+  finally{ btn.disabled = false; }
+});
+
+/* ── helpers ─────────────────────────────────────── */
+function updateUI(){
+  drop.querySelector('p').textContent = picked ? picked.name : 'Drag & drop firmware file\nor click to browse';
+  btn.disabled = !picked;
+}
+function msg(t, isErr){ 
+  msgBox.textContent = t; 
+  msgBox.style.color = isErr ? 'var(--error)' : 'var(--success)'; 
+}
+
+/* ── theme toggle ───────────────────────────────── */
+const themeToggle = document.querySelector('.theme-toggle');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+let currentTheme = localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light');
+
+document.documentElement.setAttribute('data-theme', currentTheme);
+
+themeToggle.addEventListener('click', () => {
+  currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  localStorage.setItem('theme', currentTheme);
+  
+  // Update icon
+  const icon = themeToggle.querySelector('svg');
+  if (currentTheme === 'dark') {
+    icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+  } else {
+    icon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>';
+  }
+});
+
+// Set initial icon
+if (currentTheme === 'dark') {
+  themeToggle.querySelector('svg').innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+}
+</script>
+</body>
+</html>

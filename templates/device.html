@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ device_id }} | Device Control Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --primary:#2563eb;--primary-light:#3b82f6;
+      --success:#10b981;--danger:#ef4444;
+      --bg:#f8fafc;--card-bg:#ffffff;
+      --text:#1e293b;--text-light:#64748b;
+      --border:#e2e8f0;--radius:.5rem;
+      --shadow-sm:0 1px 3px rgba(0,0,0,.05);
+      --shadow-md:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06)
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .container{max-width:1200px;margin:0 auto;padding:2rem}
+    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:.75rem}
+    .back-link{display:inline-flex;align-items:center;gap:.5rem;color:var(--primary);text-decoration:none;font-weight:500;transition:color .2s}
+    .back-link:hover{color:var(--primary-light);text-decoration:underline}
+    .page-title{font-size:1.75rem;font-weight:700;color:var(--text)}
+    /* ─── Tabs ─────────────────────────────────────────────────── */
+    .tabs{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+    .tab-btn{padding:.5rem 1.25rem;font-size:.875rem;font-weight:500;
+             background:transparent;border:1px solid var(--border);
+             border-radius:var(--radius);cursor:pointer;transition:all .2s}
+    .tab-btn:hover{background:rgba(59,130,246,.05)}
+    .tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .tab-panel{width:100%}
+    /* ─── Telemetry panel ─────────────────────────────────────── */
+    .telemetry-panel{background:var(--card-bg);border-radius:var(--radius);
+      padding:1.5rem;margin-bottom:2rem;box-shadow:var(--shadow-sm);border:1px solid var(--border)}
+    .panel-title{font-size:1.125rem;font-weight:600;margin-bottom:1.25rem;color:var(--primary);display:flex;align-items:center;gap:.5rem}
+    .panel-title svg{width:1.25rem;height:1.25rem}
+    .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}
+    .metric-card{background:var(--bg);border-radius:var(--radius);padding:1rem;border:1px solid var(--border)}
+    .metric-label{font-size:.875rem;color:var(--text-light);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+    .metric-value{font-size:1.5rem;font-weight:600}
+    .metric-unit{font-size:1rem;color:var(--text-light);margin-left:.25rem}
+    /* ─── Controls panel ──────────────────────────────────────── */
+    .controls-panel{background:var(--card-bg);border-radius:var(--radius);
+      padding:1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--border)}
+    .btn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-top:1.5rem}
+    .btn{position:relative;padding:.875rem 1rem;border:none;border-radius:var(--radius);
+      font-size:.9375rem;font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+    .btn.off{background:var(--danger);color:#fff}.btn.on{background:var(--success);color:#fff}
+    .btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+    .btn.loading::after{content:'';width:1rem;height:1rem;border:2px solid rgba(255,255,255,.3);
+      border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    /* Responsive */
+    @media(max-width:768px){
+      .container{padding:1.5rem}
+      .metrics-grid{grid-template-columns:1fr}
+      .btn-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <a href="{{ url_for('device_history', device_id=device_id) }}" class="back-link">Historical&nbsp;Data</a>
+
+      <a id="update-btn" class="back-link" href="#" style="display:none;">Update Firmware</a>
+
+      <a href="{{ url_for('select_device') }}" class="back-link">
+        <!-- back icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Devices
+      </a>
+
+      <h1 class="page-title">{{ device_id }} Control Panel</h1>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="live">Live</button>
+      <button class="tab-btn"        data-tab="history">History</button>
+    </div>
+
+    <!-- ── Live panel ─────────────────────────────────────────── -->
+    <div id="panel-live" class="tab-panel">
+      <div class="telemetry-panel">
+        <h2 class="panel-title">
+          <!-- icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 15.61a2 2 0 0 1-2 0 2 2 0 0 1-2-2 2 2 0 0 1 2-2 2 2 0 0 1 2 0 2 2 0 0 1 0 4zM3.42 15.61a2 2 0 0 1-2 0 2 2 0 0 1-2-2 2 2 0 0 1 2-2 2 2 0 0 1 2 0 2 2 0 0 1 0 4z"></path><path d="M6 15.61V7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8.61"></path><path d="M6 15.61V19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3.39"></path></svg>
+          Live Telemetry Data
+        </h2>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Voltage</div>
+            <div class="metric-value"><span id="vVal">--</span><span class="metric-unit">V</span></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Current</div>
+            <div class="metric-value"><span id="cVal">--</span><span class="metric-unit">A</span></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Temperature</div>
+            <div class="metric-value"><span id="tVal">--</span><span class="metric-unit">°C</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-panel">
+        <h2 class="panel-title">
+          <!-- icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          GPIO Controls
+        </h2>
+        <div id="buttons" class="btn-grid"></div>
+      </div>
+    </div>
+
+    <!-- ── History panel (hidden until tab clicked) ───────────── -->
+    <div id="panel-history" class="tab-panel" style="display:none;">
+      <canvas id="histChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart.js (UMD build) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <script>
+    const DEVICE_ID = "{{ device_id }}";
+    const updateBtn = document.getElementById('update-btn');
+
+    /* ───────────── Create GPIO buttons ───────────── */
+    const container = document.getElementById("buttons");
+    for (let i = 0; i < 10; i++) {
+      const btn = document.createElement("button");
+      btn.className = "btn off";
+      btn.innerHTML = `GPIO ${i}: OFF`;
+      btn.dataset.pin = i;
+      btn.dataset.state = 0;
+
+      btn.addEventListener("click", async () => {
+        btn.classList.add("loading");
+        const newState = btn.dataset.state === "0" ? 1 : 0;
+        try {
+          const res = await fetch("/api/gpio", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ device: DEVICE_ID, pin: i, state: newState })
+          });
+          if (!res.ok) throw await res.text();
+          btn.dataset.state = newState;
+          btn.textContent = `GPIO ${i}: ${newState ? "ON" : "OFF"}`;
+          btn.className = newState ? "btn on" : "btn off";
+        } catch (err) {
+          console.error(err); alert("GPIO error:\n" + err);
+        } finally { btn.classList.remove("loading"); }
+      });
+      container.appendChild(btn);
+    }
+
+    /* ───────────── Live telemetry refresh ───────────── */
+    async function refreshTelemetry() {
+      try {
+        const res = await fetch(`/api/telemetry/${DEVICE_ID}`);
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById("vVal").textContent = (+data.voltage).toFixed(2);
+          document.getElementById("cVal").textContent = (+data.current).toFixed(2);
+          document.getElementById("tVal").textContent = (+data.temperature).toFixed(1);
+          if (data.ip) {
+            updateBtn.href = `http://${data.ip}/update`;
+            updateBtn.style.display = 'inline-flex';
+          }
+        }
+      } catch(e){ console.error(e); }
+    }
+    refreshTelemetry();  setInterval(refreshTelemetry, 2000);
+
+    /* ───────────── Tabs toggle ───────────── */
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.querySelectorAll('.tab-btn')
+          .forEach(b=>b.classList.toggle('active',b===btn));
+        const tab = btn.dataset.tab;
+        document.getElementById('panel-live').style.display = tab==='live'?'block':'none';
+        document.getElementById('panel-history').style.display = tab==='history'?'block':'none';
+        if(tab==='history' && !window.histLoaded){ loadHistory(); }
+      });
+    });
+
+    /* ───────────── Load & draw history chart ───────────── */
+    async function loadHistory(){
+      try{
+        const res = await fetch(`/api/history/${DEVICE_ID}`);
+        if(!res.ok) throw await res.text();
+        const rows = await res.json();
+        if(!rows.length){ alert('No history'); return; }
+
+        const labels = rows.map(r=>r.ts.replace('T','\n'));
+        const volts  = rows.map(r=>r.voltage);
+        const currs  = rows.map(r=>r.current);
+        const temps  = rows.map(r=>r.temperature);
+
+        new Chart(document.getElementById('histChart'),{
+          type:'line',
+          data:{
+            labels,
+            datasets:[
+              {label:'Voltage (V)',     data:volts, borderWidth:1, tension:.3},
+              {label:'Current (A)',     data:currs, borderWidth:1, tension:.3},
+              {label:'Temperature (°C)',data:temps, borderWidth:1, tension:.3},
+            ]
+          },
+          options:{
+            plugins:{legend:{display:true}},
+            scales:{x:{display:false}}
+          }
+        });
+        window.histLoaded = true;
+      }catch(e){ console.error(e); alert('Failed to load history'); }
+    }
+  </script>
+</body>
+</html>
+

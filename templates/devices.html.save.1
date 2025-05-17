@@ -1,0 +1,109 @@
+<!-- File: templates/devices.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select ESP32 Device</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card-bg: #ffffff;
+      --primary: #0052cc;
+      --text: #172b4d;
+      --muted: #6b778c;
+      --border: #dfe1e6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h1 {
+      font-weight: 800;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      color: var(--primary);
+    }
+    .device-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .device-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      transition: box-shadow 0.2s ease;
+    }
+    .device-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .device-card a {
+      text-decoration: none;
+      color: var(--text);
+      display: block;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .status {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #fff;
+      border-radius: 4px;
+    }
+    .status.online { background: #27ae60; }
+    .status.offline { background: #e74c3c; }
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.logout-link {
+  font-size: 0.9rem;
+  color: var(--primary);
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+.logout-link:hover {
+  background: var(--primary);
+  color: #fff;
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Select a Device</h1>
+    <div class="device-grid">
+      {% if devices %}
+        {% for dev, status in devices.items() %}
+          <div class="device-card">
+            <a href="{{ url_for('control_device', device_id=dev) }}">{{ dev }}</a>
+            <span class="status {{ status }}">{{ status }}</span>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p style="text-align:center; color: var(--muted);">No devices currently online.</p>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
