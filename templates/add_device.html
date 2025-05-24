@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Device | IoT Control Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-hover: #3a56d4;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --text: #212529;
+      --text-light: #6c757d;
+      --border: #dee2e6;
+      --radius: 0.375rem;
+      --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+      --transition: all 0.2s ease-in-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .device-container {
+      width: 100%;
+      max-width: 28rem;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 2.5rem;
+      border: 1px solid var(--border);
+      transition: var(--transition);
+    }
+
+    .device-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .device-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.025em;
+    }
+
+    .device-form {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .form-label {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.9375rem;
+      transition: var(--transition);
+      background-color: #fefefe;
+    }
+
+    .form-input::placeholder {
+      color: #adb5bd;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+      background-color: #fff;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 1rem;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.625rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      font-size: 0.9375rem;
+    }
+
+    .back-link:hover {
+      color: var(--primary-hover);
+      text-decoration: underline;
+    }
+
+    .input-hint {
+      font-size: 0.8125rem;
+      color: var(--text-light);
+      margin-top: 0.25rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 640px) {
+      .device-container {
+        padding: 2rem 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="device-container">
+    <div class="device-header">
+      <h2 class="device-title">Add New Device</h2>
+    </div>
+
+    <form method="post" class="device-form">
+      <div class="form-group">
+        <label for="device_id" class="form-label">
+          <span class="material-symbols-outlined">devices</span>
+          Device ID
+        </label>
+        <input type="text" id="device_id" name="device_id" class="form-input" placeholder="esp32-xxxxxxxx" required>
+        <p class="input-hint">Enter the unique device identifier (e.g., esp32-12345678)</p>
+      </div>
+
+      <button type="submit" class="btn">
+        <span class="material-symbols-outlined">add</span>
+        Add Device
+      </button>
+    </form>
+
+    <a href="{{ url_for('select_device') }}" class="back-link">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Back to Device Selection
+    </a>
+  </div>
+</body>
+</html>
+

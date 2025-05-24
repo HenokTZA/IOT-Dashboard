@@ -54,6 +54,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
+from functools import wraps
+from flask import abort
 
 db = SQLAlchemy()                       # create the global handle
 
@@ -183,14 +185,39 @@ class User(db.Model):
     first    = db.Column(String(50),  nullable=False)
     last     = db.Column(String(50),  nullable=False)
     pw_hash  = db.Column(String(200), nullable=False)
+    role     = db.Column(String(10),  default="user")   # NEW  ← "admin" | "user"
 
     def check_pw(self, raw_pw) -> bool:
         return check_password_hash(self.pw_hash, raw_pw)
+
+class UserDevice(db.Model):
+    id         = db.Column(Integer, primary_key=True)
+    user_id    = db.Column(Integer, db.ForeignKey(User.id), nullable=False)
+    device_id  = db.Column(String(64), nullable=False)      # esp32-…
+
+    db.UniqueConstraint(user_id, device_id)                 # no duplicates
+
+def user_devices(user: User):
+    if user.role == "admin":
+        # admin sees every row younger than 24 h (your existing logic)
+        return Device.query.all()
+    else:
+        ids = [ud.device_id for ud in UserDevice.query.filter_by(user_id=user.id)]
+        return Device.query.filter(Device.device_id.in_(ids)).all()
 
 
 # Create tables once at startup
 with app.app_context():
     db.create_all()
+
+def admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        user = User.query.filter_by(email=session.get('user_email')).first()
+        if not user or user.role != 'admin':
+            abort(403)
+        return fn(*args, **kwargs)
+    return wrapper
 
 """
 def purge_stale_devices():
@@ -314,7 +341,7 @@ def select_device():
 """
 
 
-
+"""
 @app.route("/")
 def select_device():
     now = utc_now()                  # aware
@@ -336,6 +363,22 @@ def select_device():
         }
 
     return render_template("devices.html", devices=dev_list)
+"""
+
+@app.route("/")
+def select_device():
+    user = User.query.filter_by(email=session['user_email']).first()
+    rows = user_devices(user)
+
+    now = utc_now()
+    dev_list = {}
+    for row in rows:
+        last_seen = row.last_seen if row.last_seen.tzinfo else row.last_seen.replace(tzinfo=timezone.utc)
+        dev_list[row.device_id] = {
+            "status": row.status,
+            "last_seen": int((now - last_seen).total_seconds())
+        }
+    return render_template("devices.html", devices=dev_list, user=user)
 
 
 
@@ -474,6 +517,26 @@ def export_history(fmt, device_id):
         return {"error": "fmt must be csv or pdf"}, 400
 
 
+@app.route('/add_device', methods=['GET','POST'])
+def add_device():
+    user = User.query.filter_by(email=session['user_email']).first()
+    if user.role == "admin":
+        return redirect(url_for('select_device'))
+
+    if request.method == 'POST':
+        dev = request.form.get('device_id','').strip().lower()
+        exists = Device.query.filter_by(device_id=dev).first()
+        if not exists:
+            flash('Device not known to system','error')
+        else:
+            if not UserDevice.query.filter_by(user_id=user.id, device_id=dev).first():
+                db.session.add(UserDevice(user_id=user.id, device_id=dev))
+                db.session.commit()
+            flash('Device added','success')
+            return redirect(url_for('select_device'))
+    return render_template('add_device.html')
+
+
 @app.route("/ota")
 def ota_form():
     return render_template("ota_upload.html")
@@ -539,7 +602,7 @@ def signup():
             return redirect(url_for('login'))
     return render_template('signup.html')
 """
-
+"""
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -572,6 +635,56 @@ def signup():
             return redirect(url_for('login'))
 
     return render_template('signup.html')
+"""
+
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        # ── grab and strip all form fields ─────────────────────
+        fn       = request.form.get('first_name', '').strip()
+        ln       = request.form.get('last_name',  '').strip()
+        email    = request.form.get('email',      '').strip().lower()
+        pw       = request.form.get('password',   '')
+        cpw      = request.form.get('confirm_password', '')
+        role     = request.form.get('role', 'user')          # "admin" | "user"
+        sec_code = request.form.get('security_number', '')
+
+        # ── validation ─────────────────────────────────────────
+        if not all([fn, ln, email, pw, cpw]):
+            flash('All fields are required', 'error')
+
+        elif pw != cpw:
+            flash('Passwords do not match', 'error')
+
+        elif role == 'admin' and sec_code != '1234':
+            flash('Invalid admin security code', 'error')
+
+        elif User.query.filter_by(email=email).first():
+            flash('Email already registered', 'error')
+
+        else:
+            # ── create user ───────────────────────────────────
+            new_user = User(
+                first   = fn,
+                last    = ln,
+                email   = email,
+                pw_hash = generate_password_hash(pw),
+                role    = role
+            )
+            db.session.add(new_user)
+            db.session.commit()
+
+            flash('Registration successful – please log in.', 'success')
+            return redirect(url_for('login'))
+
+        # fall-through → some validation error; re-show form
+
+    # GET  or validation-error POST
+    return render_template('signup.html')
+
+
 
 """
 @app.route('/login', methods=['GET','POST'])
@@ -603,6 +716,26 @@ def login():
 
     return render_template('login.html')
 
+@app.route("/users")
+@admin_required
+def list_users():
+    users = User.query.filter_by(role="user").all()
+    return render_template("users.html", users=users)
+
+@app.route("/users/delete/<int:uid>", methods=["POST"])
+@admin_required
+def delete_user(uid):
+    to_del = User.query.get_or_404(uid)
+    if to_del.role == "admin":
+        flash("Cannot delete an admin account", "error")
+    else:
+        # also drop user-device links
+        UserDevice.query.filter_by(user_id=uid).delete()
+        db.session.delete(to_del)
+        db.session.commit()
+        flash("User deleted", "success")
+    return redirect(url_for("list_users"))
+
 
 @app.route('/logout')
 def logout():
@@ -622,7 +755,7 @@ def ago(seconds: int) -> str:
         return f"{hrs} h{'s' if hrs > 1 else ''}"
 
 
-
+"""
 # Protect your existing dashboard routes:
 @app.before_request
 def require_login():
@@ -631,6 +764,23 @@ def require_login():
         return
     if 'user_email' not in session:
         return redirect(url_for('login'))
+"""
+@app.before_request
+def require_login():
+    auth_paths = ['/login', '/signup', '/static/', '/api/telemetry']
+    if any(request.path.startswith(p) for p in auth_paths):
+        return
+
+    email = session.get('user_email')
+    if not email:
+        return redirect(url_for('login'))
+
+    user = User.query.filter_by(email=email).first()
+
+    if user is None:                # user was deleted
+        session.clear()
+        return redirect(url_for('login'))
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

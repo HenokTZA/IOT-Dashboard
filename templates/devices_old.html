@@ -25,22 +25,6 @@
       --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    :root[data-theme="dark"] {
-      --bg: #1a1a1a;
-      --card-bg: #2d2d2d;
-      --primary: #6366f1;
-      --primary-hover: #818cf8;
-      --text: #f3f4f6;
-      --text-light: #d1d5db;
-      --muted: #9ca3af;
-      --border: #374151;
-      --success: #34d399;
-      --error: #f87171;
-      --warning: #fbbf24;
-      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.25), 0 1px 2px 0 rgba(0, 0, 0, 0.25);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.25);
-    }
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -54,14 +38,13 @@
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 2rem 1.5rem;
-    }
+ }
 
     header {
       display: flex;
@@ -70,12 +53,6 @@
       margin-bottom: 2.5rem;
       padding-bottom: 1.5rem;
       border-bottom: 1px solid var(--border);
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
     }
 
     .page-title {
@@ -113,7 +90,7 @@
     .dashboard-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+align-items: center;
       margin-bottom: 1.5rem;
     }
 
@@ -159,7 +136,7 @@
       width: 4px;
       height: 100%;
       background: var(--border);
-      transition: var(--transition);
+transition: var(--transition);
     }
 
     .device-card.online::before {
@@ -205,7 +182,7 @@
     }
 
     .device-status {
-      display: flex;
+ display: flex;
       align-items: center;
       justify-content: space-between;
       margin-top: 1.25rem;
@@ -251,7 +228,7 @@
 
     .empty-state i {
       font-size: 2.5rem;
-      color: var(--muted);
+ color: var(--muted);
       margin-bottom: 1rem;
     }
 
@@ -297,7 +274,7 @@
     .filter-btn.active {
       background: var(--primary);
       color: #fff;
-      border-color: var(--primary);
+ border-color: var(--primary);
     }
 
     .last-seen {
@@ -306,63 +283,6 @@
       display: flex;
       align-items: center;
       gap: 0.25rem;
-    }
-
-    /* Theme Toggle Styles */
-    .theme-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 50px;
-      height: 24px;
-    }
-
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 24px;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-
-    input:checked + .slider {
-      background-color: var(--primary);
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(26px);
-    }
-
-    .toggle-icon {
-      font-size: 1rem;
-      color: var(--text-light);
     }
 
     @media (max-width: 768px) {
@@ -387,11 +307,6 @@
         gap: 1rem;
       }
 
-      .header-actions {
-        width: 100%;
-        justify-content: space-between;
-      }
-
       .dashboard-header {
         flex-direction: column;
         align-items: flex-start;
@@ -405,48 +320,20 @@
   </style>
 </head>
 <body>
-  <div class="container">
+<div class="container">
     <header>
       <h1 class="page-title">
         <i class="fas fa-network-wired"></i>
         IoT Device Dashboard
       </h1>
-      
-      <div class="header-actions">
-        
-        
-        <div class="theme-toggle">
-          <i class="fas fa-sun toggle-icon"></i>
-          <label class="toggle-switch">
-            <input type="checkbox" id="theme-toggle">
-            <span class="slider"></span>
-          </label>
-          <i class="fas fa-moon toggle-icon"></i>
-        </div>
+<!-- ── NEW: bulk-OTA upload input ───────────────────────── -->
+  <a href="{{ url_for('ota_form') }}" class="logout-link">⬆ Update&nbsp;All&nbsp;(BIN)</a>
 
-{% if user.role == 'admin' %}
-    <a href="{{ url_for('ota_form') }}" class="logout-link">
-      ⬆ Update&nbsp;All&nbsp;(BIN)
-    </a>
-  {% endif %}
-
-  {% if user.role == 'user' %}
-    <a href="{{ url_for('add_device') }}" class="logout-link">
-      + Add Device
-    </a>
-  {% endif %}
-{% if user.role == 'admin' %}
-  <a href="{{ url_for('list_users') }}" class="logout-link">
-    🧑‍🤝‍🧑 All&nbsp;Users
-  </a>
-{% endif %}
-
-        
-        <a href="{{ url_for('logout') }}" class="logout-link">
-          <i class="fas fa-sign-out-alt"></i>
-          Log out
-        </a>
-      </div>
+  <!-- ─────────────────────────────────────────────────────── -->
+      <a href="{{ url_for('logout') }}" class="logout-link">
+        <i class="fas fa-sign-out-alt"></i>
+        Log out
+      </a>
     </header>
 
     <main>
@@ -478,8 +365,7 @@
           Offline
         </button>
       </div>
-
-      <div class="device-grid">
+<div class="device-grid">
         {% if devices %}
           {% for dev, info in devices.items() %}
             <div class="device-card {{ info.status }}" data-status="{{ info.status }}">
@@ -523,7 +409,8 @@
 
   <script>
     const filterButtons = document.querySelectorAll('.filter-btn');
-    const cards = document.querySelectorAll('.device-card');
+    const cards         = document.querySelectorAll('.device-card');
+
 
     filterButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -539,30 +426,6 @@
             (wanted === 'all' || wanted === st) ? 'block' : 'none';
         });
       });
-    });
-
-    // Theme Toggle Functionality
-    const themeToggle = document.getElementById('theme-toggle');
-    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-
-    // Check for saved user preference or use system preference
-    const currentTheme = localStorage.getItem('theme') || 
-                        (prefersDarkScheme.matches ? 'dark' : 'light');
-    
-    if (currentTheme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      themeToggle.checked = true;
-    }
-
-    // Listen for toggle changes
-    themeToggle.addEventListener('change', () => {
-      if (themeToggle.checked) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem('theme', 'light');
-      }
     });
   </script>
 </body>
